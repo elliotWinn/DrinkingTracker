@@ -9,3 +9,8 @@ things to do: soft 24
 - know gradle
 - know jenkins
 - hope this works
+
+another list
+- this
+- that 
+- another
