@@ -5,3 +5,7 @@ new feauture
 
 
 things to do: soft 24
+- know git
+- know gradle
+- know jenkins
+- hope this works
