@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:test/main.dart';
+import 'settings_page.dart';
+import 'homepage.dart';
 
 enum Pages {
   home(HomePage(key: Key("homepage"))),
