@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/rendering.dart';
-import 'package:test/pages/pages.dart';
-import 'package:test/utils.dart';
+import 'package:test/pages/homepage.dart';
+import 'package:test/pages/navbar_page.dart';
+import 'package:test/pages/settings_page.dart';
 
-import 'app_data.dart';
+import 'data/app_data.dart';
+import 'utils/navbar_item.dart';
+import 'utils/navbar_scaffold.dart';
 
 void main() {
   // debugPaintSizeEnabled=true;
@@ -17,16 +19,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => Data(),
-      child: Consumer<Data>(
-        builder: (BuildContext context, Data data, Widget? child){
+      create: (context) => AppData(),
+      child: Consumer<AppData>(
+        builder: (BuildContext context, AppData data, Widget? child){
           return MaterialApp (
               title: 'Flutter Demo',
               theme: ThemeData(
                 colorScheme: ColorScheme.fromSeed(seedColor: data.backgroundColour),
                 useMaterial3: true,
               ),
-              home: data.currentPage.page
+              home: NavbarPage(data: data,),
+              // home: const HomePage(key: Key("homepage"),)
           );
         },
       ),
@@ -34,16 +37,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyNavBar extends StatelessWidget {
-  final Data data;
-
-  const MyNavBar({super.key, required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return NavBarScaffold(navBarItems: [
-      NavBarItem(icon: const Icon(Icons.home), page: Pages.home, data: data,),
-      NavBarItem(icon: const Icon(Icons.settings), page: Pages.settings, data: data,)
-    ]);
-  }
-}
+// class MyNavBar extends StatelessWidget {
+//   const MyNavBar({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return const NavBarScaffold(navBarItems: [
+//       NavBarItem(icon: Icon(Icons.home), appPage: HomePage(key: Key("homepage"),)),
+//       NavBarItem(icon: Icon(Icons.settings), appPage: SettingsPage(key: Key("settings")))
+//     ]);
+//   }
+// }

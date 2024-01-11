@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../app_data.dart';
+import '../data/app_data.dart';
 import '../main.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -9,14 +9,12 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer(
-        builder: (BuildContext context, Data data, Widget? child) {
-          return Scaffold(
-            appBar: AppBar(title: Text("settings"),),
-            body: Placeholder(),
-            bottomNavigationBar: MyNavBar(data: data),
-          );
-        }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("settings"),
+      ),
+      body: const Placeholder(),
+      // bottomNavigationBar: const MyNavBar(),
     );
   }
 }
