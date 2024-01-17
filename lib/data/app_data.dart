@@ -9,11 +9,15 @@ import 'user.dart';
 
 class AppData extends ChangeNotifier {
   static const double baseGridSize = 8;
+  static const double timeWarp = 500;
 
   DateTime startTime = DateTime.now();
 
   final double maxBAC = 0.3;
-  List<FlSpot> dataPoints = [];
+  List<FlSpot> dataPoints = [const FlSpot(0, 0)];
+  final double graphRange = 5;
+  // double minX = 0;
+  // late double maxX = graphRange;
 
   int pendingDrinks = 1;
   List<DrinkLog> drinkLogs = [];
@@ -55,11 +59,16 @@ class AppData extends ChangeNotifier {
   Color get backgroundColour => Color.fromRGBO(red, green, 0, 1);
 
   void addGraphData() {
-    // int maxDataPoints = 100;
-    // while (dataPoints.length >= maxDataPoints) {
+    dataPoints.add(FlSpot(DateTime.now().difference(startTime).inMilliseconds*timeWarp/(1000*60*60), totalBAC));
+    // print(dataPoints[dataPoints.length-1].x);
+    // while (dataPoints[dataPoints.length-1].x - dataPoints[0].x >= graphRange) {
     //   dataPoints.removeAt(0);
     // }
-    dataPoints.add(FlSpot(DateTime.now().difference(startTime).inMilliseconds/1000, totalBAC));
+
+    // if (dataPoints[dataPoints.length-1].x+1 >= graphRange)  {
+    //   // minX = dataPoints[0].x;
+    //   maxX = dataPoints[dataPoints.length-1].x+1;
+    // }
   }
 
   void addPendingDrinks() {
@@ -81,7 +90,7 @@ class AppData extends ChangeNotifier {
 
   void reset() {
     drinkLogs.clear();
-    dataPoints.clear();
+    dataPoints = [const FlSpot(0, 0)];
     startTime = DateTime.now();
     notifyListeners();
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -13,10 +14,12 @@ import '../utils/display_list.dart';
 import '../utils/drink_log_list_item.dart';
 import '../utils/horizontal_spacer.dart';
 
-class HomePage extends StatefulWidget {
-  final AppData data;
+// final PageStorageBucket pageStorageBucket = PageStorageBucket();
 
+class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.data});
+
+  final AppData data;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -24,6 +27,54 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   _HomePageState();
+
+  final double graphGridSpacing = AppData.baseGridSize * 2;
+
+  final ScrollController _pageScrollController = ScrollController();
+  final ScrollController _graphScrollController = ScrollController();
+
+  final double graphHorizontalInterval = 0.05;
+  final double graphVerticalInterval = 5 / 60; // 5 minutes
+
+  double get startingGraphWidth => MediaQuery.of(context).size.width - 100;
+
+  double get graphWidth {
+    return graphMaxX * graphGridSpacing / graphVerticalInterval;
+  }
+
+  double get graphMaxX {
+    double lastGraphX =
+        widget.data.dataPoints[widget.data.dataPoints.length - 1].x;
+    double maxXFromStartingWidth =
+        startingGraphWidth * graphVerticalInterval / graphGridSpacing;
+
+    if (lastGraphX >= maxXFromStartingWidth) {
+      return lastGraphX;
+    } else {
+      return maxXFromStartingWidth;
+    }
+  }
+
+  double get graphHeight =>
+      graphMaxY * graphGridSpacing / graphHorizontalInterval;
+
+  double get graphMaxY => widget.data.maxBAC;
+
+  void _scrollToEnd(ScrollController controller) {
+    double maxScrollExtent = controller.position.maxScrollExtent;
+    if (maxScrollExtent != 0) {
+       controller.jumpTo(maxScrollExtent);
+      // controller.animateTo(maxScrollExtent,
+      //     duration: const Duration(milliseconds: 50), curve: Curves.bounceIn);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageScrollController.dispose();
+    _graphScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -36,6 +87,7 @@ class _HomePageState extends State<HomePage> {
     final Timer graphTimer =
         Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (mounted) {
+        _scrollToEnd(_graphScrollController);
         while (widget.data.dataPoints.length > 1000) {
           widget.data.dataPoints.removeAt(0);
         }
@@ -52,6 +104,9 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.white,
       // bottomNavigationBar: const MyNavBar(),
       body: SingleChildScrollView(
+        controller: _pageScrollController,
+        key: const PageStorageKey<String>('pageOne'),
+        reverse: false,
         child: Container(
           margin: const EdgeInsets.symmetric(
             vertical: AppData.baseGridSize * 3,
@@ -116,69 +171,76 @@ class _HomePageState extends State<HomePage> {
                   // ),
                   Container(
                     padding: const EdgeInsets.all(20),
+                    width: double.infinity,
                     decoration: BoxDecoration(
                         border: Border.all(),
                         borderRadius:
                             const BorderRadius.all(Radius.circular(10))),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 100,
-                      child: LineChart(LineChartData(
-                        gridData: FlGridData(
-                            show: true,
-                            drawVerticalLine: true,
-                            drawHorizontalLine: true,
-                            horizontalInterval: 0.05,
-                            verticalInterval: 3,
-                            getDrawingHorizontalLine: (value) {
-                              return FlLine(
-                                  color: Colors.grey.withOpacity(0.5),
-                                  strokeWidth: 1);
-                            },
-                            getDrawingVerticalLine: (value) {
-                              return FlLine(
-                                  color: Colors.grey.withOpacity(0.5),
-                                  strokeWidth: 1);
-                            }),
-                        titlesData: const FlTitlesData(
-                          show: true,
-
-                        ),
-                        borderData: FlBorderData(
-                          show: true,
-                          border:
-                              Border.all(color: Colors.grey.withOpacity(0.5)),
-                        ),
-                        minX: 0,
-                        maxX: 50,
-                        minY: 0,
-                        maxY: 0.3,
-                        lineBarsData: [
-                          LineChartBarData(
-                            show: widget.data.dataPoints.isNotEmpty,
-                            spots: widget.data.dataPoints,
-                            isCurved: true,
-                            // gradient: LinearGradient(
-                            //   colors: [Colors.red, Colors.green],
-                            // ),
-                            // barWidth: 5,
-
-                            dotData: const FlDotData(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        controller: _graphScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          height: graphHeight,
+                          width: graphWidth,
+                          child: LineChart(LineChartData(
+                            gridData: FlGridData(
+                                show: true,
+                                drawVerticalLine: true,
+                                drawHorizontalLine: true,
+                                horizontalInterval: graphHorizontalInterval,
+                                verticalInterval: graphVerticalInterval,
+                                getDrawingHorizontalLine: (value) {
+                                  return FlLine(
+                                      color: Colors.grey.withOpacity(0.5),
+                                      strokeWidth: 1);
+                                },
+                                getDrawingVerticalLine: (value) {
+                                  return FlLine(
+                                      color: Colors.grey.withOpacity(0.5),
+                                      strokeWidth: 1);
+                                }),
+                            titlesData: const FlTitlesData(
                               show: false,
                             ),
-                            belowBarData: BarAreaData(
-                              show: false,
-                              // gradient: LinearGradient(
-                              //   // colors: gradientColors
-                              //       .map((color) => color.withOpacity(0.3))
-                              //       .toList(),
-                              // ),
+                            borderData: FlBorderData(
+                              show: true,
+                              border: Border.all(
+                                  color: Colors.grey.withOpacity(0.5)),
                             ),
-                          ),
-                        ],
-                      )),
+                            minX: 0,
+                            maxX: graphMaxX,
+                            minY: 0,
+                            maxY: graphMaxY,
+                            lineBarsData: [
+                              LineChartBarData(
+                                show: widget.data.dataPoints.isNotEmpty,
+                                spots: widget.data.dataPoints,
+                                isCurved: true,
+                                // gradient: LinearGradient(
+                                //   colors: [Colors.red, Colors.green],
+                                // ),
+                                // barWidth: 5,
+
+                                dotData: const FlDotData(
+                                  show: false,
+                                ),
+                                belowBarData: BarAreaData(
+                                  show: false,
+                                  // gradient: LinearGradient(
+                                  //   // colors: gradientColors
+                                  //       .map((color) => color.withOpacity(0.3))
+                                  //       .toList(),
+                                  // ),
+                                ),
+                              ),
+                            ],
+                          )),
+                        ),
+                      ),
                     ),
                   ),
+
                   Container(
                       // margin: EdgeInsets.only(top: Data.baseGridSize*1.5,),
                       child: DrinkInputFieldHorizontal(
@@ -201,10 +263,21 @@ class _HomePageState extends State<HomePage> {
                       border: Border.all()),
                   child: Column(children: [
                     const Text("History"),
-                    DisplayList(List.generate(
-                        widget.data.drinkLogs.length,
-                        (i) => DrinkLogListItem(widget.data
-                            .drinkLogs[widget.data.drinkLogs.length - i - 1]))),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: widget.data.drinkLogs.length,
+                      itemBuilder: (context, index) {
+                        return DrinkLogListItem(
+                          widget.data.drinkLogs[
+                              widget.data.drinkLogs.length - index - 1],
+                        );
+                      },
+                    ),
+                    // DisplayList(List.generate(
+                    //     widget.data.drinkLogs.length,
+                    //     (i) => DrinkLogListItem(widget.data
+                    //         .drinkLogs[widget.data.drinkLogs.length - i - 1]))
+                    // ),
                   ]),
                 ))
               ],

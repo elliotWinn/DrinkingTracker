@@ -1,8 +1,10 @@
+import 'package:test/data/app_data.dart';
+
 import '../data/drink_log.dart';
 
 abstract class DrinkLogState {
   final DrinkLog drinkLog;
-  final double timeWarp  = 3000;
+  final double timeWarp = AppData.timeWarp;
   double getBacContribution(double weightKG, bool isMale, double elapsedHours);
   DrinkLogState(this.drinkLog);
 
